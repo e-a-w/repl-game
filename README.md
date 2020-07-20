@@ -2,6 +2,8 @@
 
 This is a Javascript repl card game for class.
 
+[repl link](https://repl.it/@ewatkins/cardgame)
+
 **Rules**
 
 - There are four players: you and three computer players.
