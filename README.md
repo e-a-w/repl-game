@@ -1,8 +1,8 @@
 # repl-game
 
-This is a a repl card game for class.
+This is a Javascript repl card game for class.
 
-*Rules*
+**Rules**
 
 - There are four players: you and three computer players.
 - You will lead with a card of your choice. The computer players will play a card of that same suit.
@@ -10,3 +10,9 @@ This is a a repl card game for class.
 - If the computer player does not have a card in your suit, they will play a card of a different suit, but it will not rank higher than yours.
 
 *Cards of rank 10 are removed from the game since they cause errors*
+
+**Packages Used:**
+
+- [chalk](https://github.com/chalk/chalk)
+- [readline-sync](https://www.npmjs.com/package/readline-sync)
+- [node-cards](http://kbjr.github.io/node-cards/index.html)

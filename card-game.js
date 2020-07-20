@@ -1,6 +1,7 @@
 let  readlineSync  =  require('readline-sync');
 const { decks, suits } = require('cards');
-var colors = require('colors');
+const chalk = require('chalk');
+const log = console.log;
 const card = require('cards/src/card');
 
 // PLAYERS
@@ -29,6 +30,49 @@ let playersArray = [
 ];
 
 
+/// FUNCTION TO CHECK USERNAME IS VALID
+
+let userName;
+let alphabet = /[a-zA-Z]/
+
+const checkUserName = () => {
+    while (alphabet.test(userName) === false || userName.length < 3) {
+        if (alphabet.test(userName) === false) {
+            console.log(chalk.red("Your name must contain at least one letter!"));
+            userName = readlineSync.question(chalk.inverse('\nWhat\'s your name?') + '\t');
+        }
+        if (userName.length < 3) {
+            console.log(chalk.red('I need a name longer than 2 characters!'));
+            userName = readlineSync.question(chalk.inverse('\nWhat\'s your name?') + '\t');
+        }
+    }
+}
+
+/// FUNCTION TO CHOOSE # CARDS IN HAND
+
+const chooseNumCards = () => {
+    cardsInHand = readlineSync.questionInt(chalk.inverse('\nHow many cards per player would you like dealt? Please choose a number between 5 and 12.'))
+    + "\t\n",
+    {limitMessage: chalk.red('Input valid number, please.')};
+
+    do {
+        if (cardsInHand > 12 || cardsInHand < 5) {
+            console.log(chalk.red("You must choose a number between 5 and 12!"));
+            cardsInHand = readlineSync.questionInt(chalk.inverse('\nHow many cards per player would you like dealt? Please choose a number between 5 and 13.')
+            + "\n\n",
+            {limitMessage: chalk.red('Input valid number, please.')});
+        }
+    } while (cardsInHand > 12 || cardsInHand < 5)
+}
+
+// FUNCTION TO PLAY # TRICKS IN A HAND
+
+const playHand = () => {
+    for (i = 0; i < cardsInHand; i++) {
+        playTrick();
+    }
+}
+
 // FUNCTIONS TO BEGIN NEW HAND & DEAL DECK
 
 let cardsInHand = 12;
@@ -39,35 +83,6 @@ const dealDeck = () => {
     for (let i = 0; i < playersArray.length; i++) {
         playersArray[i].hand = newHand();
     }
-}
-
-/// FUNCTION TO CHECK USERNAME IS VALID
-
-const checkUserName = () => {
-    do {
-        if (userName.length < 3) {
-            console.log('I need a name longer than 2 characters!');
-            userName = readlineSync.question('\nWhat\'s your name?'.bgBlack.brightYellow + '\t');
-        }
-    } while (userName.length < 3);
-}
-
-/// FUNCTION TO CHOOSE # CARDS IN HAND
-
-const chooseNumCards = () => {
-    cardsInHand = readlineSync.questionInt('\nHow many cards per player would you like dealt? Please choose a number between 5 and 12.'.bgBlack.brightYellow
-    + "\n\n",
-    {limitMessage: 'Input valid number, please.'.bold.red});
-
-    do {
-        console.log(`\nYou have chosen to play with a hand of ${cardsInHand} cards per player.`.bgBlack.brightYellow);
-        if (cardsInHand > 12 || cardsInHand < 5) {
-            console.log("You must choose a number between 5 and 12!".bold.red);
-            cardsInHand = readlineSync.questionInt('\nHow many cards per player would you like dealt? Please choose a number between 5 and 13.'.bgBlack.brightYellow
-            + "\n\n",
-            {limitMessage: 'Input valid number, please.'.bold.red});
-        }
-    } while (cardsInHand > 12 || cardsInHand < 5)
 }
 
 //FUNCTION TO DISPLAY LIST OF CARDS & CLEAR ARRAYS 
@@ -177,16 +192,16 @@ const switchConvert = (toConvert) => {
     if (faceCards.test(toConvert)) {
         switch(toConvert) {
             case 'A':
-                toConvert = 14;
+                toConvert = parseInt('14');
                 break;
             case 'K':
-              toConvert = 13;
+              toConvert = parseInt('13');
               break;
             case 'Q':
-              toConvert = 12;
+              toConvert = parseInt('12');
               break;
             case 'J':
-                toConvert = 11;
+                toConvert = parseInt('11');
                 break;
         }
     } else {
@@ -196,18 +211,39 @@ const switchConvert = (toConvert) => {
 
 const convertTrickArray = () => {
     for (let i = 0; i < trickArray.length; i++) {
-        switchConvert(trickArray[i]);
+         if (faceCards.test(trickArray[i])) {
+        switch(trickArray[i]) {
+            case 'A':
+                trickArray[i] = parseInt('14');
+                break;
+            case 'K':
+              trickArray[i] = parseInt('13');
+              break;
+            case 'Q':
+              trickArray[i] = parseInt('12');
+              break;
+            case 'J':
+                trickArray[i] = parseInt('11');
+                break;
+        }
+    } else {
+        trickArray[i] = parseInt(trickArray[i]);
+    }
     }
 }
+
+// NOTE: the above works with cleaner code (trickArray[i] as a parameter of switchConvert) in the terminal, but not in REPL */
+
 
 // FUNCTION TO SCORE A TRICK
 
 const logEnemyTrick = (enemyIndex) => {
     playersArray[enemyIndex].trickWinCount++;
-    console.log(`\n\t${playersArray[enemyIndex].name} won this trick! They have taken ${playersArray[enemyIndex].trickWinCount} tricks so far.`.red)
+    console.log(chalk.red.bold(`\n\t${playersArray[enemyIndex].name} won this trick! They have taken ${playersArray[enemyIndex].trickWinCount} tricks so far.`))
 }
 
 const scoreTrick = () => {
+  convertTrickArray();
     let highestCard = trickArray[0];
     for (let i = 1; i < trickArray.length; i++) {
         if (trickArray[i] > highestCard) {
@@ -216,7 +252,7 @@ const scoreTrick = () => {
     }
     if (highestCard == trickArray[0]) {
         playersArray[0].trickWinCount++;
-        console.log(`\n\tYou won this trick! You have taken ${playersArray[0].trickWinCount} tricks so far.`.green)
+        console.log(chalk.green.bold(`\n\tYou won this trick! You have taken ${playersArray[0].trickWinCount} tricks so far.`))
     } else if (highestCard == trickArray[1]) {
         logEnemyTrick(1);
     } else if (highestCard == trickArray[2]) {
@@ -226,19 +262,18 @@ const scoreTrick = () => {
     } 
 }
 
-
-// FUNCTION TO PLAY A TRICK
+// FUNCTION TO PLAY A FULL TRICK
 
 const playTrick = () => {
 
-    readlineSync.keyInPause('\nReady to go on?'.dim);
+    readlineSync.keyInPause(chalk.dim('\nReady to go on?'));
 
     resetArrays();
 
-    console.log(`\n${userName}, here are the cards in your hand!`.bgBlack.brightYellow);
-    index = readlineSync.keyInSelect(yourHandArray, 'Which card would you like to play?\t'.bgBlack.brightYellow, {cancel: false});
+    console.log(chalk.inverse(`\n${userName}, here are the cards in your hand!`));
+    index = readlineSync.keyInSelect(yourHandArray, chalk.inverse('Which card would you like to play?\t'), {cancel: false});
 
-    console.log(`\n\tYou have played ${yourHandArray[index]}`.bold);
+    console.log(chalk.bold.underline(`\n\tYou have played ${yourHandArray[index]}`));
 
     chosenCard = yourHandArray[index];
     (chosenCard[0] === '1') ? inputRank = chosenCard.slice(0,2) : inputRank = chosenCard.slice(0,1);
@@ -254,20 +289,12 @@ const playTrick = () => {
     scoreTrick();
 }
 
-// FUNCTION TO PLAY 12 TRICKS IN A HAND
-
-const playHand = () => {
-    for (i = 0; i < cardsInHand; i++) {
-        playTrick();
-    }
-}
-
-// FUNCTION TO CALCULATE & DISPLAY SCORE
+// FUNCTION TO CALCULATE & DISPLAY GAME SCORE
 
 const scoreThisHand = () => {
-    readlineSync.keyInPause('\nReady to go on?'.dim);
-    console.log('\nTime to calculate the SCORE!'.bgBlack.brightYellow);
-    for(let i = 0; i < 12; i++) {console.log("calculating.... calculating...".dim);}
+    readlineSync.keyInPause(chalk.dim('\nReady to go on?'));
+    console.log(chalk.yellow('\nTime to calculate the SCORE!'));
+    for(let i = 0; i < 12; i++) {console.log(chalk.dim("calculating.... calculating..."));}
     console.log('\n');
 
     for (let i = 0; i < playersArray.length; i++) {
@@ -297,16 +324,16 @@ const scoreThisHand = () => {
 
     switch (winLoseTie) {
         case 'win':
-            console.log('\nCONGRATS! You won the game! :)'.rainbow + '\n');
+            console.log(chalk.bold.green('\nCONGRATS! You won the game! :)') + '\n');
             break;
         case 'lose':
-            console.log(`\nSorry, you lost the game! :( ${winner} had the highest score!`.bold.brightRed + '\n');
+            console.log(chalk.bold.red(`\nSorry, you lost the game! :( ${winner} had the highest score!`) + '\n');
             break;
         case 'playerTie':
-            console.log(`\nWow, you tied! The winners are: ${winner}`.bold.magenta + '\n');
+            console.log(chalk.bold.magenta(`\nWow, you tied! The winners are: ${winner}`) + '\n');
             break;
         case 'EnemyTie':
-            console.log(`\nSorry, you lost the game! :( ${winner} tied for the highest score!`.bold.brightRed + '\n');
+            console.log(chalk.bold.red(`\nSorry, you lost the game! :( ${winner} tied for the highest score!`) + '\n');
             break;
     }
 }
@@ -319,13 +346,13 @@ const resetTrickWinCount = () => {
     }
 }
 
-/// PLAY A FULL GAME
+/// FUNCTION TO PLAY A FULL GAME ///
 
-// let deck = new decks.StandardDeck({ jokers: 0 });
 let deck;
 
 const playGame = () => {
     chooseNumCards();
+    console.log(chalk.inverse(`\nYou have chosen to play with a hand of ${cardsInHand} cards per player.`));
     deck = new decks.StandardDeck({ jokers: 0 });
     deck.shuffleAll();
     const tens = deck.findCards((card) => card.rank.shortName === '10');
@@ -340,12 +367,12 @@ const playGame = () => {
 // FUNCTION FOR PLAYING AGAIN
 
 const playAgain = () => {
-    let yesOrNo = readlineSync.keyInYNStrict('\n' + 'Do you want to play again? y || n'.bold.blue + "\n\n");
+    let yesOrNo = readlineSync.keyInYNStrict('\n' + chalk.inverse('Do you want to play again? y || n') + "\n\n");
     if (yesOrNo){
-        console.log("\n\tLet's play again!".bgBlack.brightYellow);
+        console.log(chalk.inverse("\n\tLet's play again!"));
         playGame()
     } else {
-        console.log("\n\tBye! Thanks for playing!".bgBlack.brightYellow);
+        console.log(chalk.inverse("\n\tBye! Thanks for playing!"));
     }
 }
 
@@ -355,17 +382,17 @@ const playAgain = () => {
 
 // INTRODUCTION
 
-console.log("Welcome to the Card Game!".bgBlack.brightYellow);
-let userName = readlineSync.question('\nWhat\'s your name?'.bgBlack.brightYellow + '\n\n');
+console.log("Welcome to the Card Game!");
+userName = readlineSync.question(chalk.inverse('\nWhat\'s your name?') + '\n\n');
 
 checkUserName();
 
-console.log(`\nOkay, ${userName}! Here are the instructions!`);
+console.log(chalk.inverse(`\nOkay, ${userName}! Here are the instructions!`));
 console.log(`\n\t1-- There are four players: you and three computer players. Each of you will be dealt a hand of cards.`);
 console.log("\t2-- You will choose a card from your hand to discard. Each computer player will discard a card from their hands of that same suit.");
 console.log("\t3-- Whoever played the highest-ranking card will win the trick! At the end of the game, the player with the most tricks wins the game!")
 console.log("\n\t^ If the computer player does not have a card of the same suit, they will discard a card of a different suit, but it will not rank higher than yours.");
-console.log("\n" + "Let's go!".bgBlack.brightYellow + "\n\n\n");
+console.log("\n" + chalk.inverse("Let's go!") + "\n\n\n");
 
 // GAMEPLAY
 
